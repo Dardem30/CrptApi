@@ -36,8 +36,8 @@ public class CrptApi {
     }
 
     public static final ThrowableFunction<Document, String> createDocument = document -> {
-        HttpRequest request = null;
-        String json = null;
+        HttpRequest request;
+        String json;
         try {
             json = mapper.writeValueAsString(document);
             request = HttpRequest
@@ -69,14 +69,17 @@ public class CrptApi {
             logger.log(Level.WARNING, "Failed to execute the call", e);
             throw e;
         } finally {
-            cleanUpLog();
-            apiCallsLog.add(System.currentTimeMillis());
+            addLogEntry(System.currentTimeMillis());
         }
     }
 
-    private void cleanUpLog() {
-        final long threshold = System.currentTimeMillis() - msRequestLimitsThreshold;
-        this.apiCallsLog = apiCallsLog.stream().filter(callTimeMs -> callTimeMs > threshold).collect(Collectors.toList());
+    private void addLogEntry(final Long logEntry) {
+        try {
+            final long threshold = System.currentTimeMillis() - msRequestLimitsThreshold;
+            apiCallsLog = apiCallsLog.stream().filter(callTimeMs -> callTimeMs > threshold).collect(Collectors.toList());
+        } finally {
+            apiCallsLog.add(logEntry);
+        }
     }
 
     private boolean isApiLimitReached() {
